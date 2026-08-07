@@ -19,35 +19,51 @@ export interface UserRecord {
   lastLogin?: string;
 }
 
-const usersFile = path.join(process.cwd(), 'uploads', 'users_db.json');
+const getDbFilePath = () => {
+  if (process.env.VERCEL) {
+    return path.join('/tmp', 'uploads', 'users_db.json');
+  }
+  return path.join(process.cwd(), 'uploads', 'users_db.json');
+};
 
-// Ensure directory exists
-const ensureDir = () => {
-  const dir = path.dirname(usersFile);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+let inMemoryUsers: UserRecord[] = [];
+
+const ensureDir = (filePath: string) => {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('Unable to create db dir:', err);
   }
 };
 
 export function loadUsers(): UserRecord[] {
-  ensureDir();
+  const file = getDbFilePath();
+  ensureDir(file);
   try {
-    if (fs.existsSync(usersFile)) {
-      const data = fs.readFileSync(usersFile, 'utf-8');
-      return JSON.parse(data);
+    if (fs.existsSync(file)) {
+      const data = fs.readFileSync(file, 'utf-8');
+      const loaded = JSON.parse(data);
+      if (Array.isArray(loaded) && loaded.length > 0) {
+        inMemoryUsers = loaded;
+      }
     }
   } catch (err) {
-    console.error('Error reading users_db.json:', err);
+    console.warn('Error reading users_db.json:', err);
   }
-  return [];
+  return inMemoryUsers;
 }
 
 export function saveUsers(users: UserRecord[]): void {
-  ensureDir();
+  inMemoryUsers = users;
+  const file = getDbFilePath();
+  ensureDir(file);
   try {
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), 'utf-8');
+    fs.writeFileSync(file, JSON.stringify(users, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing users_db.json:', err);
+    console.warn('Error writing users_db.json (using in-memory store):', err);
   }
 }
 

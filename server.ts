@@ -11,9 +11,13 @@ const app = express();
 const PORT = 3000;
 
 // Ensure upload directory exists
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDir = process.env.VERCEL ? path.join("/tmp", "uploads") : path.join(process.cwd(), "uploads");
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn("Upload dir creation handled:", err);
 }
 
 // Multer Storage Configuration

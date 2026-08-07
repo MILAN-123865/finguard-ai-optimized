@@ -11,30 +11,46 @@ export interface SentEmail {
   sentAt: string;
 }
 
-const emailsFile = path.join(process.cwd(), 'uploads', 'emails_db.json');
+const getEmailsFilePath = () => {
+  if (process.env.VERCEL) {
+    return path.join('/tmp', 'uploads', 'emails_db.json');
+  }
+  return path.join(process.cwd(), 'uploads', 'emails_db.json');
+};
 
-const ensureDir = () => {
-  const dir = path.dirname(emailsFile);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+let inMemoryEmails: SentEmail[] = [];
+
+const ensureDir = (filePath: string) => {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('Unable to create email db dir:', err);
   }
 };
 
 export function loadSentEmails(): SentEmail[] {
-  ensureDir();
+  const file = getEmailsFilePath();
+  ensureDir(file);
   try {
-    if (fs.existsSync(emailsFile)) {
-      const data = fs.readFileSync(emailsFile, 'utf-8');
-      return JSON.parse(data);
+    if (fs.existsSync(file)) {
+      const data = fs.readFileSync(file, 'utf-8');
+      const loaded = JSON.parse(data);
+      if (Array.isArray(loaded) && loaded.length > 0) {
+        inMemoryEmails = loaded;
+      }
     }
   } catch (err) {
-    console.error('Error reading emails_db.json:', err);
+    console.warn('Error reading emails_db.json:', err);
   }
-  return [];
+  return inMemoryEmails;
 }
 
 export function saveSentEmail(email: Omit<SentEmail, 'id' | 'sentAt'>): SentEmail {
-  ensureDir();
+  const file = getEmailsFilePath();
+  ensureDir(file);
   const emails = loadSentEmails();
   const newEmail: SentEmail = {
     ...email,
@@ -42,12 +58,12 @@ export function saveSentEmail(email: Omit<SentEmail, 'id' | 'sentAt'>): SentEmai
     sentAt: new Date().toISOString(),
   };
   emails.unshift(newEmail);
-  // Keep last 50 emails
   const trimmed = emails.slice(0, 50);
+  inMemoryEmails = trimmed;
   try {
-    fs.writeFileSync(emailsFile, JSON.stringify(trimmed, null, 2), 'utf-8');
+    fs.writeFileSync(file, JSON.stringify(trimmed, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing emails_db.json:', err);
+    console.warn('Error writing emails_db.json (using in-memory store):', err);
   }
   return newEmail;
 }
@@ -65,12 +81,6 @@ export function sendVerificationOTPEmail(to: string, fullName: string, otp: stri
       <p style="color: #8899a6; font-size: 12px;">This code will expire in 10 minutes. If you did not request this code, please ignore this email.</p>
     </div>
   `;
-
-  console.log(`\n==================================================`);
-  console.log(`✉ [NODEMAILER EMAIL SERVICE] Sent Verification OTP`);
-  console.log(`To: ${to}`);
-  console.log(`OTP Code: ${otp}`);
-  console.log(`==================================================\n`);
 
   return saveSentEmail({
     to,
@@ -94,12 +104,6 @@ export function sendPasswordResetOTPEmail(to: string, fullName: string, otp: str
       <p style="color: #8899a6; font-size: 12px;">This code will expire in 10 minutes. If you did not request a password reset, your account remains secure.</p>
     </div>
   `;
-
-  console.log(`\n==================================================`);
-  console.log(`✉ [NODEMAILER EMAIL SERVICE] Sent Password Reset OTP`);
-  console.log(`To: ${to}`);
-  console.log(`Reset Code: ${otp}`);
-  console.log(`==================================================\n`);
 
   return saveSentEmail({
     to,
@@ -196,37 +200,14 @@ export async function sendEmergencyAlertEmail(params: EmergencyEmailParams, maxR
     </div>
   `;
 
-  let attempts = 0;
-  let lastError = '';
+  saveSentEmail({
+    to: params.to,
+    subject,
+    type: 'EMERGENCY_ALERT',
+    bodyHtml
+  });
 
-  while (attempts <= maxRetries) {
-    attempts++;
-    try {
-      console.log(`\n==================================================`);
-      console.log(`🚨 [EMERGENCY EMAIL SERVICE] Attempt ${attempts}/${maxRetries + 1}`);
-      console.log(`To Contact: ${params.to} (${params.contactName})`);
-      console.log(`Subject: ${subject}`);
-      console.log(`==================================================\n`);
-
-      saveSentEmail({
-        to: params.to,
-        subject,
-        type: 'EMERGENCY_ALERT',
-        bodyHtml
-      });
-
-      return { success: true, attempts };
-    } catch (err: any) {
-      lastError = err?.message || 'Unknown transport error';
-      console.error(`Error sending emergency email to ${params.to} (Attempt ${attempts}):`, lastError);
-      if (attempts <= maxRetries) {
-        // Retry delay
-        await new Promise(res => setTimeout(res, 500 * attempts));
-      }
-    }
-  }
-
-  return { success: false, attempts, error: lastError };
+  return { success: true, attempts: 1 };
 }
 
 export function sendUserSOSConfirmationEmail(userEmail: string, userName: string, emergencyTime: string, googleMapsUrl: string): SentEmail {
@@ -268,4 +249,3 @@ export function sendImSafeNotificationEmail(to: string, contactName: string, use
     bodyHtml
   });
 }
-

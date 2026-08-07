@@ -51,38 +51,54 @@ interface EmergencyDatabaseSchema {
   events: SOSEventRecord[];
 }
 
-const emergencyDbFile = path.join(process.cwd(), 'uploads', 'emergency_db.json');
+const getEmergencyDbFilePath = () => {
+  if (process.env.VERCEL) {
+    return path.join('/tmp', 'uploads', 'emergency_db.json');
+  }
+  return path.join(process.cwd(), 'uploads', 'emergency_db.json');
+};
 
-const ensureDir = () => {
-  const dir = path.dirname(emergencyDbFile);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+let inMemoryEmergencyDb: EmergencyDatabaseSchema = { contacts: [], events: [] };
+
+const ensureDir = (filePath: string) => {
+  try {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  } catch (err) {
+    console.warn('Unable to create emergency db dir:', err);
   }
 };
 
 export function loadEmergencyDb(): EmergencyDatabaseSchema {
-  ensureDir();
+  const file = getEmergencyDbFilePath();
+  ensureDir(file);
   try {
-    if (fs.existsSync(emergencyDbFile)) {
-      const data = fs.readFileSync(emergencyDbFile, 'utf-8');
+    if (fs.existsSync(file)) {
+      const data = fs.readFileSync(file, 'utf-8');
       const parsed = JSON.parse(data);
-      return {
-        contacts: parsed.contacts || [],
-        events: parsed.events || []
-      };
+      if (parsed && (Array.isArray(parsed.contacts) || Array.isArray(parsed.events))) {
+        inMemoryEmergencyDb = {
+          contacts: parsed.contacts || [],
+          events: parsed.events || []
+        };
+      }
     }
   } catch (err) {
-    console.error('Error reading emergency_db.json:', err);
+    console.warn('Error reading emergency_db.json:', err);
   }
-  return { contacts: [], events: [] };
+  return inMemoryEmergencyDb;
 }
 
 export function saveEmergencyDb(db: EmergencyDatabaseSchema): void {
-  ensureDir();
+  inMemoryEmergencyDb = db;
+  const file = getEmergencyDbFilePath();
+  ensureDir(file);
   try {
-    fs.writeFileSync(emergencyDbFile, JSON.stringify(db, null, 2), 'utf-8');
+    fs.writeFileSync(file, JSON.stringify(db, null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing emergency_db.json:', err);
+    console.warn('Error writing emergency_db.json (using in-memory store):', err);
   }
 }
 
