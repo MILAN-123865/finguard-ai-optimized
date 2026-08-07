@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+*, ::before, ::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: #F7F8F5;
+  color: #111827;
+}
+
+body, button, input, select, textarea, h1, h2, h3, h4, h5, h6 {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: clamp(0.875rem, 0.8rem + 0.2vw, 1rem);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Standardized Design System Typography Classes */
+.display-xl {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(2.25rem, 1.75rem + 2vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.display-lg {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.875rem, 1.5rem + 1.5vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.section-title, .heading-xl {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  color: #111827;
+}
+
+.heading-lg {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.card-title, .heading-md {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.125rem, 1rem + 0.4vw, 1.375rem);
+  font-weight: 700;
+  line-height: 1.35;
+  color: #111827;
+}
+
+.widget-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  font-weight: 700;
+  line-height: 1.4;
+  color: #111827;
+}
+
+.body-text, .body {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+  font-weight: 400;
+  line-height: 1.5;
+  color: #64748B;
+}
+
+.label-sm, .caption, .label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #64748B;
+}
+
+@layer base {
+  :root {
+    --bg-surface: #F7F8F5;
+    --primary: #11875D;
+    --primary-light: #DDF2EA;
+    --secondary: #64748B;
+    --on-surface: #111827;
+    --border: #E4E7E5;
+    --card-bg: #FFFFFF;
+  }
+
+  h1 { font-size: clamp(2rem, 1.5rem + 2.5vw, 3.5rem) !important; line-height: 1.15 !important; font-weight: 700 !important; color: #111827 !important; }
+  h2 { font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2.25rem) !important; line-height: 1.2 !important; font-weight: 700 !important; color: #111827 !important; }
+  h3 { font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.625rem) !important; line-height: 1.3 !important; font-weight: 700 !important; color: #111827 !important; }
+  h4 { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem) !important; line-height: 1.4 !important; font-weight: 700 !important; color: #111827 !important; }
+}
+
+/* Global Clean Card & Panel Classes */
+.glass-card, .glass-panel {
+  background-color: #FFFFFF !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #E4E7E5 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  color: #111827 !important;
+}
+
+.glass-input, .input-glass {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E4E7E5 !important;
+  border-radius: 12px !important;
+  color: #111827 !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-input:focus, .input-glass:focus {
+  border-color: #11875D !important;
+  box-shadow: 0 0 0 3px rgba(17, 135, 93, 0.15) !important;
+  outline: none !important;
+}
+
+/* Overrides for hardcoded dark classes across components */
+[class*="bg-[#0f1321]"],
+[class*="bg-[#070913]"],
+[class*="bg-[#070a14]"],
+[class*="bg-[#0a0d1a]"],
+[class*="bg-[#0a0d1c]"],
+[class*="bg-[#080b1a]"],
+[class*="bg-[#05091b]"],
+[class*="bg-[#080d26]"],
+[class*="bg-[#040718]"],
+[class*="bg-[#0a102a]"],
+[class*="bg-[#060a1c]"],
+[class*="bg-[#02040a]"],
+[class*="bg-[#030712]"],
+[class*="bg-[#0d111d]"],
+[class*="bg-slate-950"],
+[class*="bg-slate-900"],
+[class*="bg-slate-900/90"],
+[class*="bg-slate-900/80"],
+[class*="bg-slate-900/50"],
+[class*="bg-slate-800"],
+[class*="bg-gray-950"],
+[class*="bg-gray-900"] {
+  background-color: #FFFFFF !important;
+}
+
+/* Background light tints for cards / sections */
+[class*="bg-white/5"],
+[class*="bg-white/[0.03]"],
+[class*="bg-white/[0.02]"],
+[class*="bg-white/10"],
+[class*="bg-black/30"],
+[class*="bg-black/40"],
+[class*="bg-black/50"] {
+  background-color: #F8FAFC !important;
+}
+
+/* Border overrides */
+[class*="border-white/5"],
+[class*="border-white/10"],
+[class*="border-white/20"],
+[class*="border-white/30"],
+[class*="border-[#00e5ff]"],
+[class*="border-[#00daf3]"] {
+  border-color: #E4E7E5 !important;
+}
+
+/* Text overrides for hardcoded dark themes */
+.text-white,
+[class*="text-[#dfe1f6]"],
+[class*="text-[#c3f5ff]"] {
+  color: #111827 !important;
+}
+
+[class*="text-[#bac9cc]"],
+[class*="text-[#849396]"] {
+  color: #64748B !important;
+}
+
+[class*="text-[#00daf3]"],
+[class*="text-[#00e5ff]"] {
+  color: #11875D !important;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+select {
+  color-scheme: light;
+}
+
+select option {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  padding: 8px 12px;
+}
+
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #printable-threat-report,
+  #printable-threat-report * {
+    visibility: visible !important;
+  }
+  #printable-threat-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    background: #FFFFFF !important;
+    color: #111827 !important;
+  }
+  nav, header, footer, button, .no-print {
+    display: none !important;
+  }
+}

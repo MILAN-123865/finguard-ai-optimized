@@ -1,0 +1,6 @@
+{
+  "name": "FinGuard AI",
+  "description": "AI-powered cybersecurity platform for detecting phishing messages, fake banking SMS, malicious URLs, WhatsApp scams, and financial fraud.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
