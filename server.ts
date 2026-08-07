@@ -1406,10 +1406,11 @@ app.post("/api/reports/:id/upvote", (req, res) => {
 });
 
 // 7. Dynamic Scanner Analyze Endpoint
-app.post("/api/scanner/analyze", async (req, res) => {
-  const { type, content } = req.body;
+app.post(["/api/scan", "/scan", "/api/scanner/analyze", "/scanner/analyze"], async (req, res) => {
+  const content = req.body.content || req.body.message || req.body.payload || "";
+  const type = req.body.type || req.body.scanType || 'sms';
   if (!content || typeof content !== 'string') {
-    return res.status(400).json({ error: "Missing required string field 'content'" });
+    return res.status(400).json({ error: "Missing required string field 'content' or 'message'" });
   }
 
   const scanType = (type || 'sms').toLowerCase();
