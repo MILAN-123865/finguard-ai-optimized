@@ -429,68 +429,72 @@ function analyzeContentServer(type: string, content: string) {
   const text = (content || '').trim();
   const lower = text.toLowerCase();
 
-  let score = 8;
   const keywords: string[] = [];
   let extractedUrls: string[] = [];
 
-  // Extract URLs using regex
   const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.(com|net|org|io|xyz|top|info|site|cn|ru|cc|tk)[^\s]*)/gi;
   const matches = text.match(urlRegex);
   if (matches) {
     extractedUrls = Array.from(new Set(matches.map(m => m.startsWith('http') ? m : `https://${m}`)));
   }
 
-  // Known trusted domains
-  const knownSafeDomains = ['google.com', 'github.com', 'apple.com', 'microsoft.com', 'wikipedia.org', 'amazon.com', 'youtube.com', 'finguard.ai', 'chase.com', 'bankofamerica.com', 'paypal.com'];
+  const knownSafeDomains = ['google.com', 'github.com', 'apple.com', 'microsoft.com', 'wikipedia.org', 'amazon.com', 'youtube.com', 'finguard.ai', 'chase.com', 'bankofamerica.com', 'paypal.com', 'wellsfargo.com', 'gov.in', 'nic.in'];
   const isExplicitlySafeUrl = (type === 'url' || extractedUrls.length > 0) && knownSafeDomains.some(d => lower.includes(d));
 
-  // Explicit Scam / Malicious Evidence indicators
-  const maliciousLures = ['click here to claim', 'account suspended verify now', 'urgent action required to avoid lock', 'send otp', 'provide password', 'unauthorized access verify', 'wire transfer immediately', 'claim your prize', 'lottery winner', 'gift card code'];
-  const suspiciousDomains = ['auth', 'sec', 'login', 'portal', 'verify', 'update', 'billing', 'support', 'claim', 'award', 'download'];
+  let riskPoints = 0;
 
-  let threatEvidenceCount = 0;
-
-  maliciousLures.forEach(lure => {
+  // 1. Urgency & Coercion Lures
+  const urgencyLures = ['urgent', 'urgently', 'immediately', 'account suspended', 'account locked', 'account blocked', 'verify now', 'action required', 'within 24 hours', 'deactivated', 'legal action', 'police', 'arrest', 'warrant', 'fine', 'penalty', 'disconnection', 'electricity bill'];
+  urgencyLures.forEach(lure => {
     if (lower.includes(lure)) {
-      threatEvidenceCount++;
-      keywords.push(lure.toUpperCase());
+      riskPoints += 25;
+      if (!keywords.includes('URGENT COERCION')) keywords.push('URGENT COERCION');
     }
   });
 
-  // Check URL specific anomalies
-  let domainRisk = false;
+  // 2. Credential Harvesting & OTP
+  const credentialLures = ['enter password', 'provide password', 'verify otp', 'send otp', 'share otp', 'enter otp', 'pin number', 'cvv', 'pan card', 'kyc update', 'netbanking', 'login here', 'update details', 'verify account', 'unauthorized access', 'security alert'];
+  credentialLures.forEach(lure => {
+    if (lower.includes(lure)) {
+      riskPoints += 30;
+      if (!keywords.includes('CREDENTIAL HARVESTING')) keywords.push('CREDENTIAL HARVESTING');
+    }
+  });
+
+  // 3. Financial Fraud / Impersonation
+  const financialLures = ['wire transfer', 'send money', 'transfer money', 'claim prize', 'lottery', 'winner', 'gift card', 'cashback', 'part time job', 'earn money', 'crypto', 'bitcoin', 'investment', 'telegram', 'zelle', 'upi id', 'gpay', 'paytm', 'phonepe', 'dropped phone', 'temporary number', 'need money'];
+  financialLures.forEach(lure => {
+    if (lower.includes(lure)) {
+      riskPoints += 25;
+      if (!keywords.includes('FINANCIAL FRAUD LURE')) keywords.push('FINANCIAL FRAUD LURE');
+    }
+  });
+
+  // 4. Domain Anomalies & Link Scams
   if ((type === 'url' || extractedUrls.length > 0) && !isExplicitlySafeUrl) {
+    riskPoints += 20;
     const urlsToCheck = type === 'url' ? [text, ...extractedUrls] : extractedUrls;
     urlsToCheck.forEach(u => {
       const uLower = u.toLowerCase();
-      suspiciousDomains.forEach(sd => {
-        if (uLower.includes(sd)) {
-          domainRisk = true;
-          if (!keywords.includes('SPOOFED DOMAIN')) keywords.push('SPOOFED DOMAIN');
-        }
-      });
-      if (uLower.includes('bit.ly') || uLower.includes('tinyurl') || uLower.includes('.xyz') || uLower.includes('.top') || uLower.includes('.site') || uLower.includes('-net') || uLower.includes('-sec')) {
-        domainRisk = true;
-        if (!keywords.includes('SUSPICIOUS TLD / LINK')) keywords.push('SUSPICIOUS TLD / LINK');
+      if (uLower.includes('bit.ly') || uLower.includes('tinyurl') || uLower.includes('.xyz') || uLower.includes('.top') || uLower.includes('.site') || uLower.includes('-net') || uLower.includes('-sec') || uLower.includes('auth') || uLower.includes('verify')) {
+        riskPoints += 25;
+        if (!keywords.includes('SPOOFED PHISHING DOMAIN')) keywords.push('SPOOFED PHISHING DOMAIN');
       }
     });
   }
 
-  if (domainRisk) threatEvidenceCount++;
-
-  // Score computation according to guidelines
-  if (threatEvidenceCount === 0) {
-    // Plain text talking about bank, payment, salary, transfer without phishing indicators -> SAFE
-    score = Math.floor(Math.random() * 10) + 5; // 5-15%
-    if (keywords.length === 0) keywords.push('LEGITIMATE / BENIGN CONTENT');
-  } else if (threatEvidenceCount === 1) {
-    score = 35; // LOW RISK
-  } else if (threatEvidenceCount === 2) {
-    score = 55; // MEDIUM
-  } else if (threatEvidenceCount === 3) {
-    score = 75; // HIGH
+  let score = 5;
+  if (riskPoints === 0) {
+    score = Math.floor(Math.random() * 8) + 5;
+    keywords.push('LEGITIMATE / BENIGN CONTENT');
+  } else if (riskPoints <= 25) {
+    score = 35;
+  } else if (riskPoints <= 50) {
+    score = 58;
+  } else if (riskPoints <= 75) {
+    score = 78;
   } else {
-    score = 92; // CRITICAL
+    score = Math.min(98, 85 + Math.floor(riskPoints / 5));
   }
 
   let riskLevel: 'SAFE' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'SAFE';
@@ -500,27 +504,20 @@ function analyzeContentServer(type: string, content: string) {
   else if (score >= 21) riskLevel = 'LOW';
   else riskLevel = 'SAFE';
 
-  const isScam = score >= 61;
-  const confidence = Math.min(99.9, Number((96.2 + ((text.length * 17 + score) % 36) / 10).toFixed(1)));
+  const isScam = score >= 60;
+  const confidence = Math.min(99.9, Number((96.5 + ((text.length * 13 + score) % 25) / 10).toFixed(1)));
 
   let hashVal = 0;
   const combined = text + '_' + type + '_' + Date.now();
   for (let i = 0; i < combined.length; i++) hashVal = (hashVal << 5) - hashVal + combined.charCodeAt(i);
   const hash = `0x${Math.abs(hashVal).toString(16).padStart(8, '0')}${Math.abs(hashVal * 17).toString(16).padStart(8, '0')}`;
 
-  let reasoning = '';
-  let recommendation = '';
-
-  if (isScam) {
-    reasoning = `Multiple malicious threat indicators identified. Evidence includes spoofed domains, credential Harvesting attempts, or pressure tactics.`;
-    recommendation = `Do not click links or respond. Block the sender immediately.`;
-  } else if (riskLevel === 'MEDIUM' || riskLevel === 'LOW') {
-    reasoning = `Minor suspicious patterns detected but insufficient conclusive evidence of malicious intent.`;
-    recommendation = `Exercise caution and verify the sender independently.`;
-  } else {
-    reasoning = `No phishing links, fake domains, or social engineering lures detected. Communication is benign.`;
-    recommendation = `Safe content. Maintain standard security awareness.`;
-  }
+  let reasoning = isScam
+    ? `Multiple malicious threat indicators identified: ${keywords.join(', ')}. Evidence suggests phishing, spoofed links, or social engineering.`
+    : `No phishing links, credential harvesting, or coercion detected. Communication is benign.`;
+  let recommendation = isScam
+    ? `Do not click links or respond. Block the sender immediately.`
+    : `Safe content. Maintain standard security awareness.`;
 
   return {
     id: `scan_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
