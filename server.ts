@@ -1613,6 +1613,10 @@ Return JSON strictly adhering to this schema:
 });
 
 async function startServer() {
+  if (process.env.VERCEL) {
+    return;
+  }
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1633,7 +1637,10 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export default app;
+
 
