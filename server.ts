@@ -3,7 +3,6 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import * as XLSX from "xlsx";
-import { createServer as createViteServer } from "vite";
 import authRoutes from "./src/server/routes/authRoutes";
 import emergencyRoutes from "./src/server/routes/emergencyRoutes";
 
@@ -1623,6 +1622,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

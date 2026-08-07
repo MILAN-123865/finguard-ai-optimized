@@ -392,10 +392,17 @@ function analyzeContentClientFallback(
 
 export const scanService = {
   async scanContent(type: ScanType, content: string): Promise<ScanResult> {
-    const response = await apiClient.post("/scan", {
+    try {
+      const response = await apiClient.post("/scan", {
+        type,
+        content,
         message: content,
-    });
+      });
 
-    return normalizeScanResult(response.data, type, content);
-}
+      return normalizeScanResult(response.data, type, content);
+    } catch (err: any) {
+      console.warn("Backend /api/scan endpoint unavailable, performing client threat analysis:", err?.message);
+      return analyzeContentClientFallback(type, content);
+    }
+  }
 };
