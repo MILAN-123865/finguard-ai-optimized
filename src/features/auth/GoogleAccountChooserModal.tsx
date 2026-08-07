@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, UserPlus, CheckCircle2, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { extractErrorMessage } from '../../services/apiAuth';
 
 interface GoogleAccountChooserModalProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export const GoogleAccountChooserModal: React.FC<GoogleAccountChooserModalProps>
       }
     } catch (err: any) {
       console.error('Google Auth Error:', err);
-      setError(err?.response?.data?.error || err?.message || 'Google authentication failed.');
+      setError(extractErrorMessage(err, 'Google authentication failed.'));
       setIsAuthenticating(false);
     }
   };
@@ -115,7 +116,7 @@ export const GoogleAccountChooserModal: React.FC<GoogleAccountChooserModalProps>
       }
     } catch (err: any) {
       console.error('Google Auth Error:', err);
-      setError(err?.response?.data?.error || err?.message || 'Google authentication failed.');
+      setError(extractErrorMessage(err, 'Google authentication failed.'));
       setIsAuthenticating(false);
     }
   };

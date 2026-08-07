@@ -196,7 +196,7 @@ app.post("/api/chat/save", (req, res) => {
 // 2. Get Chat History Endpoint
 app.get("/api/chat/history", (req, res) => {
   const userId = req.query.userId ? String(req.query.userId) : "usr_109283";
-  
+
   const userChats = chatHistoryMemoryStore
     .filter(item => item.userId === userId)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -425,7 +425,7 @@ app.get("/api/history/export", (req, res) => {
 function analyzeContentServer(type: string, content: string) {
   const text = (content || '').trim();
   const lower = text.toLowerCase();
-  
+
   let score = 8;
   const keywords: string[] = [];
   let extractedUrls: string[] = [];
@@ -1205,7 +1205,7 @@ app.get("/api/history/analytics", (req, res) => {
     // Generate 7 day buckets (Mon - Sun or Last 7 days)
     const daysMap: { [key: string]: { safe: number; threat: number; total: number; label: string } } = {};
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
+
     // Create 7 day buckets starting from 6 days ago up to today
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
@@ -1237,7 +1237,7 @@ app.get("/api/history/analytics", (req, res) => {
   } else if (range === "30d") {
     // Generate 30 daily buckets for last 30 days
     const daysMap: { [key: string]: { safe: number; threat: number; total: number; label: string } } = {};
-    
+
     for (let i = 29; i >= 0; i--) {
       const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const dateKey = d.toISOString().split("T")[0];
@@ -1634,3 +1634,6 @@ async function startServer() {
 }
 
 startServer();
+
+export default app;
+

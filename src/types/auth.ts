@@ -9,7 +9,7 @@ export interface User {
   googleId?: string;
   avatarUrl?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   lastLogin?: string;
 }
 
