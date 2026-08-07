@@ -483,9 +483,9 @@ function analyzeContentServer(type: string, content: string) {
     });
   }
 
-  let score = 5;
+  let score = 0;
   if (riskPoints === 0) {
-    score = Math.floor(Math.random() * 8) + 5;
+    score = 0;
     keywords.push('LEGITIMATE / BENIGN CONTENT');
   } else if (riskPoints <= 25) {
     score = 35;
@@ -505,7 +505,7 @@ function analyzeContentServer(type: string, content: string) {
   else riskLevel = 'SAFE';
 
   const isScam = score >= 60;
-  const confidence = Math.min(99.9, Number((96.5 + ((text.length * 13 + score) % 25) / 10).toFixed(1)));
+  const confidence = 98.5;
 
   let hashVal = 0;
   const combined = text + '_' + type + '_' + Date.now();

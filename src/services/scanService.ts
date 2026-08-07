@@ -260,7 +260,7 @@ export function evaluateThreatNLP(
 
   let riskPoints = 0;
 
-  // 1. Coercion & High Urgency Lures
+  // 1. Urgency & Coercion Lures
   const urgencyLures = [
     "urgent", "urgently", "immediately", "account suspended", "account locked",
     "account blocked", "verify now", "action required", "within 24 hours",
@@ -319,10 +319,10 @@ export function evaluateThreatNLP(
     });
   }
 
-  // Calculate final score
-  let score = 5;
+  // Calculate final score: 0% for benign messages without risk points
+  let score = 0;
   if (riskPoints === 0) {
-    score = Math.floor(Math.random() * 8) + 5; // 5 - 12% (SAFE)
+    score = 0; // Deterministic 0% for safe benign messages
     keywords.push("LEGITIMATE / BENIGN CONTENT");
   } else if (riskPoints <= 25) {
     score = 35; // LOW RISK
@@ -340,7 +340,7 @@ export function evaluateThreatNLP(
   const raw = {
     score,
     riskLevel,
-    confidence: Math.min(99.9, Number((96.5 + ((text.length * 13 + score) % 25) / 10).toFixed(1))),
+    confidence: 98.5,
     scamType: isScam
       ? keywords.includes("CREDENTIAL HARVESTING")
         ? "Credential Harvesting / Phishing Scam"
